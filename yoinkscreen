@@ -1,0 +1,17 @@
+#!/bin/bash
+
+sleep 0.2
+
+FOLDER="${HOME}/media/rec/$(date +"%y-%m")"
+FILE="rec-$(date +"%F_%T")"
+
+AVIPATH="${FOLDER}/${FILE}.avi"
+MP4PATH="${FOLDER}/${FILE}.mp4"
+
+mkdir -p "$FOLDER"
+
+st -e ffcast -s rec -m 2 "$AVIPATH"
+
+ffmpeg -i "$AVIPATH" "$MP4PATH"
+
+echo $MP4PATH

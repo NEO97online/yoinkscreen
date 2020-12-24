@@ -1,17 +1,91 @@
 #!/bin/bash
 
-sleep 0.2
+statusfile="/tmp/yoinkscreen"
 
-FOLDER="${HOME}/media/rec/$(date +"%y-%m")"
-FILE="rec-$(date +"%F_%T")"
+record_screen() {
+	sleep 0.2
 
-AVIPATH="${FOLDER}/${FILE}.avi"
-MP4PATH="${FOLDER}/${FILE}.mp4"
+	folder="${HOME}/media/rec/$(date +"%y-%m")"
+	file="rec-$(date +"%F_%T")"
 
-mkdir -p "$FOLDER"
+	avipath="${folder}/${file}.avi"
+	mp4path="${folder}/${file}.mp4"
 
-st -c "yoinkscreen" -e ffcast -s rec -m 2 "$AVIPATH"
+	mkdir -p "$folder"
 
-ffmpeg -i "$AVIPATH" "$MP4PATH" && rm "$AVIPATH"
+	# mark yoinkscreen as running
+	echo 1 > "$statusfile"
 
-echo $MP4PATH
+	ffcast -s rec -m 2 "$avipath"
+
+	ffmpeg -i "$avipath" "$mp4path" && rm "$avipath"
+
+	# mark yoinkscreen as done
+	if [ -f "$statusfile" ]; then
+		rm "$statusfile"
+	fi
+
+	echo $mp4path
+}
+
+check_status() {
+	if [ -f "$statusfile" ]; then
+		echo "recording..."
+	else
+		echo ""
+	fi
+}
+
+kill_recording() {
+	pkill -fxn '(/\S+)*ffmpeg\s.*\sx11grab\s.*'
+	killall ffcast
+	killall xrectsel
+	if [ -f "$statusfile" ]; then
+		rm "$statusfile"
+	fi
+}
+
+usage() {
+    cat <<EOF
+yoinkscreen v0.1
+Usage:
+  ${0##*/} [options]
+Options:
+  -s            print "recording" if active (otherwise no output) and exit. useful for status bars
+  -h            print this help and exit
+  -k            kill all running recording processes and exit (files will still be saved)
+All options can be repeated, and are processed in order.
+EOF
+    exit "${1:-0}"
+}
+
+while getopts ":shk" arg; do
+	case ${arg} in 
+		h)
+			usage
+			exit 0
+			;;
+		s)
+			check_status
+			exit 0
+			;;
+		k)
+			kill_recording
+			exit 0
+			;;
+		:)
+			echo "$0: Must supply an argument to -$OPTARG." >&2
+			exit 1
+			;;
+		?)
+			echo "Invalid option: -${OPTARG}."
+			exit 2
+			;;
+	esac
+done
+
+if [ -f "$statusfile" ]; then
+	kill_recording	
+else
+	record_screen
+fi

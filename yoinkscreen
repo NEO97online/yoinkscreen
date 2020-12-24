@@ -10,8 +10,8 @@ MP4PATH="${FOLDER}/${FILE}.mp4"
 
 mkdir -p "$FOLDER"
 
-st -e ffcast -s rec -m 2 "$AVIPATH"
+st -c "yoinkscreen" -e ffcast -s rec -m 2 "$AVIPATH"
 
-ffmpeg -i "$AVIPATH" "$MP4PATH"
+ffmpeg -i "$AVIPATH" "$MP4PATH" && rm "$AVIPATH"
 
 echo $MP4PATH

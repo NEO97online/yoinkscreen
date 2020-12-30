@@ -1,0 +1,6 @@
+if pgrep -x "yoinkscreen" >/dev/null
+then
+	echo "recording..."
+else
+	echo ""
+fi

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-statusfile="/tmp/yoinkscreen"
-
 record_screen() {
 	sleep 0.2
 
@@ -13,36 +11,17 @@ record_screen() {
 
 	mkdir -p "$folder"
 
-	# mark yoinkscreen as running
-	echo 1 > "$statusfile"
-
 	ffcast -s rec -m 2 "$avipath"
 
 	ffmpeg -i "$avipath" "$mp4path" && rm "$avipath"
 
-	# mark yoinkscreen as done
-	if [ -f "$statusfile" ]; then
-		rm "$statusfile"
-	fi
-
 	echo $mp4path
-}
-
-check_status() {
-	if [ -f "$statusfile" ]; then
-		echo "recording..."
-	else
-		echo ""
-	fi
 }
 
 kill_recording() {
 	pkill -fxn '(/\S+)*ffmpeg\s.*\sx11grab\s.*'
 	killall ffcast
 	killall xrectsel
-	if [ -f "$statusfile" ]; then
-		rm "$statusfile"
-	fi
 }
 
 usage() {
@@ -51,7 +30,6 @@ yoinkscreen v0.1
 Usage:
   ${0##*/} [options]
 Options:
-  -s            print "recording" if active (otherwise no output) and exit. useful for status bars
   -h            print this help and exit
   -k            kill all running recording processes and exit (files will still be saved)
 All options can be repeated, and are processed in order.
@@ -59,14 +37,10 @@ EOF
     exit "${1:-0}"
 }
 
-while getopts ":shk" arg; do
+while getopts ":hk" arg; do
 	case ${arg} in 
 		h)
 			usage
-			exit 0
-			;;
-		s)
-			check_status
 			exit 0
 			;;
 		k)
@@ -84,8 +58,10 @@ while getopts ":shk" arg; do
 	esac
 done
 
-if [ -f "$statusfile" ]; then
+if pgrep -x "ffcast" >/dev/null
+then
 	kill_recording	
 else
 	record_screen
 fi
+

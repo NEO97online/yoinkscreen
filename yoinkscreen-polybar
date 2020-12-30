@@ -1,7 +1,7 @@
 [module/yoinkscreen]
 	type = custom/script
 	interval = 0.25
-	exec = yoinkscreen -s
+	exec = yoinkscreen-status
 	format-foreground = ${colors.color1}
 	click-left = yoinkscreen -k
   
